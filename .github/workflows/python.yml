@@ -3,7 +3,7 @@ name: Service UGC
 on:
   pull_request:
     branches:
-      - "master"
+      - "main"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
       - name: Set up python version
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ maxtix.python-version }}
 
       - name: Create directories
         run: |
@@ -29,7 +29,7 @@ jobs:
           pip install  wemake-python-styleguide flake8-html mypy
       - name: Lint with wemake-python-styleguide
         run: |
-          flake8 api/src --exit-zero --format=html --htmldir=reports/kafka_api/wemake-python-styleguide/
+          flake8 kafka_api/src --exit-zero --format=html --htmldir=reports/kafka_api/wemake-python-styleguide/
       - name: Lint with mypy
         run: |
-          mypy --html-report reports/kafka_api/mypy/ api/src/* || true
+          mypy --html-report reports/kafka_api/mypy/ kafka_api/src/* || true
