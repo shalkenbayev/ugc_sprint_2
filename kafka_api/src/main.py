@@ -1,5 +1,10 @@
+import os
+import uuid
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from loguru import logger
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+import sentry_sdk
 
 from api.v1.events import event_api
 from core.config import settings
@@ -7,12 +12,33 @@ from core.di import DI
 from services.event_service import EventService
 
 
+sentry_sdk.init(
+    dsn=os.getenv('SENTRY_DSN'),
+    traces_sample_rate=1.0,
+)
+
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     docs_url="/api/docs",
     openapi_url="/api/openapi.json"
 )
+
+
+@app.middleware("http")
+async def log_middle(request: Request, call_next):
+    """Middleware to append request_id to logs extra data."""
+    request_id = request.headers.get('X-Request-Id', str(uuid.uuid4()))
+    config = {"extra": {"request_id": request_id}}
+    logger.configure(**config)
+    response = await call_next(request)
+    return response
+
+try:
+    app.add_middleware(SentryAsgiMiddleware)
+except Exception as error:
+    logger.error(f'Sentry integration failed, error - {error}')
+    pass
 
 app.include_router(event_api, prefix="/api/v1/events")
 
