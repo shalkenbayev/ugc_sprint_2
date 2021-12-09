@@ -1,6 +1,30 @@
 version: '3.5'
 
 services:
+  ugc_api:
+    build: ./kafka_api
+    ports:
+      - "8888:8888"
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - connect
+      - control-center
+      - ksqldb-server
+      - ksqldb-cli
+      - ksql-datagen
+      - rest-proxy
+      - zookeeper-clickhouse
+      - clickhouse-node1
+      - clickhouse-node2
+      - clickhouse-node3
+      - clickhouse-node4
+      - elasticsearch
+      - logstash
+      - kibana
+
+
   zookeeper:
     image: confluentinc/cp-zookeeper:6.0.1
     hostname: zookeeper
@@ -10,7 +34,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-
   broker:
     image: confluentinc/cp-server:6.0.1
     hostname: broker
@@ -221,3 +244,32 @@ services:
       - ./data/node4:/etc/clickhouse-server
     depends_on:
       - zookeeper-clickhouse
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
+    environment:
+      discovery.type: single-node
+    ports:
+      - "9200:9200"
+    volumes:
+      - /tmp/esdata:/tmp/elasticsearch/data
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.14.2
+    environment:
+      ES_HOST: "elasticsearch:9200"
+      XPACK_MONITORING_ENABLED: "false"
+    ports:
+      - "5044:5044/udp"
+    volumes:
+      - ./deploy/logstash.conf:/config/logstash.conf:ro
+    command: logstash -f /config/logstash.conf
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.2
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
