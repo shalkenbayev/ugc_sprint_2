@@ -3,6 +3,7 @@ import uuid
 
 import sentry_sdk
 import uvicorn
+import sentry_sdk
 from fastapi import FastAPI, Request
 from loguru import logger
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
