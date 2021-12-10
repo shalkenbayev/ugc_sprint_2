@@ -26,7 +26,6 @@ services:
       - logstash
       - kibana
 
-
   zookeeper:
     image: confluentinc/cp-zookeeper:6.0.1
     hostname: zookeeper
@@ -36,15 +35,28 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: zookeeper
+    depends_on:
+      - logstash
   broker:
     image: confluentinc/cp-server:6.0.1
     hostname: broker
     container_name: broker
     depends_on:
       - zookeeper
+      - logstash
     ports:
       - "9092:9092"
       - "9101:9101"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: broker
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -66,14 +78,21 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
+
   schema-registry:
     image: confluentinc/cp-schema-registry:6.0.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
       - broker
+      - logstash
     ports:
       - "8081:8081"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: registry
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker:29092'
@@ -86,8 +105,14 @@ services:
     depends_on:
       - broker
       - schema-registry
+      - logstash
     ports:
       - "8083:8083"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: connect
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
@@ -119,8 +144,14 @@ services:
       - schema-registry
       - connect
       - ksqldb-server
+      - logstash
     ports:
       - "9021:9021"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: control-center
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
       CONTROL_CENTER_CONNECT_CLUSTER: 'connect:8083'
@@ -140,8 +171,14 @@ services:
     depends_on:
       - broker
       - connect
+      - logstash
     ports:
       - "8088:8088"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: ksqldb-server
     environment:
       KSQL_CONFIG_DIR: "/etc/ksql"
       KSQL_BOOTSTRAP_SERVERS: "broker:29092"
@@ -163,7 +200,13 @@ services:
       - broker
       - connect
       - ksqldb-server
+      - logstash
     entrypoint: /bin/sh
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: ksqldb-cli
     tty: true
 
   ksql-datagen:
@@ -175,6 +218,12 @@ services:
       - broker
       - schema-registry
       - connect
+      - logstash
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: ksql-datagen
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
                        cub kafka-ready -b broker:29092 1 40 && \
                        echo Waiting for Confluent Schema Registry to be ready... && \
@@ -193,8 +242,14 @@ services:
     depends_on:
       - broker
       - schema-registry
+      - logstash
     ports:
       - 8082:8082
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: rest-proxy
     hostname: rest-proxy
     container_name: rest-proxy
     environment:
@@ -207,6 +262,13 @@ services:
     image: zookeeper:3.5
     container_name: zookeeper-clickhouse
     hostname: zookeeper
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: zookeeper-clickhouse
+    depends_on:
+      - logstash
 
   clickhouse-node1:
     image: yandex/clickhouse-server:20.4
@@ -215,37 +277,61 @@ services:
     ports:
       - "8123:8123"
       - "9000:9000"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: clickhouse-node1
     volumes:
       - ./data/node1:/etc/clickhouse-server
     depends_on:
       - zookeeper-clickhouse
+      - logstash
 
   clickhouse-node2:
     image: yandex/clickhouse-server:20.4
     container_name: clickhouse-node2
     hostname: clickhouse-node2
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: clickhouse-node2
     volumes:
       - ./data/node2:/etc/clickhouse-server
     depends_on:
       - zookeeper-clickhouse
+      - logstash
 
   clickhouse-node3:
     image: yandex/clickhouse-server:20.4
     container_name: clickhouse-node3
     hostname: clickhouse-node3
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: clickhouse-node3
     volumes:
       - ./data/node3:/etc/clickhouse-server
     depends_on:
       - zookeeper-clickhouse
+      - logstash
 
   clickhouse-node4:
     image: yandex/clickhouse-server:20.4
     container_name: clickhouse-node4
     hostname: clickhouse-node4
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://127.0.0.1:5044
+        tag: clickhouse-node4
     volumes:
       - ./data/node4:/etc/clickhouse-server
     depends_on:
       - zookeeper-clickhouse
+      - logstash
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
