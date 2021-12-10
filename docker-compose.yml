@@ -5,6 +5,8 @@ services:
     build: ./kafka_api
     ports:
       - "8888:8888"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "broker:29092"
     depends_on:
       - zookeeper
       - broker
