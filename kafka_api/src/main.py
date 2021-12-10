@@ -1,10 +1,11 @@
 import os
 import uuid
+
 import uvicorn
+import sentry_sdk
 from fastapi import FastAPI, Request
 from loguru import logger
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-import sentry_sdk
 
 from api.v1.events import event_api
 from core.config import settings
@@ -38,7 +39,6 @@ try:
     app.add_middleware(SentryAsgiMiddleware)
 except Exception as error:
     logger.error(f'Sentry integration failed, error - {error}')
-    pass
 
 app.include_router(event_api, prefix="/api/v1/events")
 
