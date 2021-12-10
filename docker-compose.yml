@@ -273,3 +273,15 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
+
+  mongodb:
+    container_name: "mongodb"
+    image: mongo
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./mongo:/data/db
+    ports:
+      - "27017:27017"
+    restart: always
