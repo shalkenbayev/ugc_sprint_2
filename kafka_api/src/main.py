@@ -1,6 +1,7 @@
 import os
 import uuid
 
+import sentry_sdk
 import uvicorn
 import sentry_sdk
 from fastapi import FastAPI, Request
@@ -11,7 +12,6 @@ from api.v1.events import event_api
 from core.config import settings
 from core.di import DI
 from services.event_service import EventService
-
 
 sentry_sdk.init(
     dsn=os.getenv('SENTRY_DSN'),
@@ -34,6 +34,7 @@ async def log_middle(request: Request, call_next):
     logger.configure(**config)
     response = await call_next(request)
     return response
+
 
 try:
     app.add_middleware(SentryAsgiMiddleware)
