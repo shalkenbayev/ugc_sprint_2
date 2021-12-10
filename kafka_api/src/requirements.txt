@@ -1,6 +1,6 @@
 fastapi==0.70.0
 pydantic==1.8.2
-uvicorn==0.15.0
+uvicorn==0.16.0
 loguru==0.5.3
 aiokafka==0.7.2
 python-logstash==0.4.6
