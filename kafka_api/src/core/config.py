@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     movie_events_topic: str = "movie_events"
 
     log_level: str = Field("INFO", env="LOG_LEVEL")
-    mongo_host: str = Field("MONGO_HOST", env="MONGO_HOST", default="localhost")
+    mongo_host: str = Field("localhost", env="MONGO_HOST")
 
 
 settings = Settings()
