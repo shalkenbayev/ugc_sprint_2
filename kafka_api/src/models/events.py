@@ -11,18 +11,22 @@ class KafkaEvent(BaseModel):
 
 class BaseEvent(BaseModel):
     """Определяем свой базовый класс с новыми методами"""
+
     def to_event(self):
         raise NotImplementedError
 
 
-class MovieWatchProgressEvent(BaseEvent):
+class DefaultUserModel(BaseModel):
+    user_id: str
+    movie_id: str
+
+
+class MovieWatchProgressEvent(DefaultUserModel):
     """Модель входящих данных для формирования события о прогрессе просмотра фильма пользователем
     user_id: идентификатор пользователя
     movie_id: идентификатор фильма
     viewed_frame: временная отметка прогресса просмотра фильма
     """
-    user_id: str
-    movie_id: str
     viewed_frame: str
 
     def to_event(self):
@@ -30,3 +34,15 @@ class MovieWatchProgressEvent(BaseEvent):
         key = f"{self.user_id}:{self.movie_id}".encode("utf-8")
         value = self.viewed_frame.encode("utf-8")
         return KafkaEvent(key=key, value=value)
+
+
+class UserLike(DefaultUserModel):
+    pass
+
+
+class UserSaveFilms(DefaultUserModel):
+    pass
+
+
+class UserComment(DefaultUserModel):
+    content: str

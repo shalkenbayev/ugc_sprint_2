@@ -8,6 +8,7 @@ from loguru import logger
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from api.v1.events import event_api
+from api.v1.user_events import user_event
 from core.config import settings
 from core.di import DI
 from services.event_service import EventService
@@ -41,6 +42,7 @@ except Exception as error:
     logger.error(f'Sentry integration failed, error - {error}')
 
 app.include_router(event_api, prefix="/api/v1/events")
+app.include_router(user_event, prefix="/api/v1/events")
 
 
 @app.on_event("startup")
