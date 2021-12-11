@@ -1,4 +1,5 @@
 import time
+import random
 
 from elasticsearch import Elasticsearch
 
@@ -18,6 +19,14 @@ def get_data():
     return time.time() - start
 
 
+def get_find_data():
+    start = time.time()
+    random_id = random.randint(0, 10000)
+    es_client.search(index="test_index", body={"query": {"match": {"message": {"query": random_id}}}}, size=10000)
+    return time.time() - start
+
+
 if __name__ == '__main__':
-    # print(saving_data_test())
+    print(saving_data_test())
     print(get_data())
+    print(get_find_data())
